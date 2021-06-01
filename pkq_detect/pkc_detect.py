@@ -9,7 +9,7 @@ import numpy as np
 from PIL import Image
 import torch.utils.data
 
-
+# 重写一下dataset方法
 class PikachuDetDataset(torch.utils.data.Dataset):
     """皮卡丘检测数据集类"""
     def __init__(self, data_dir, part, image_size=(256, 256)):
@@ -21,8 +21,10 @@ class PikachuDetDataset(torch.utils.data.Dataset):
         self.transform = torchvision.transforms.Compose([
             # 将 PIL 图片转换成位于[0.0, 1.0]的floatTensor, shape (C x H x W)
             torchvision.transforms.ToTensor()])
+
     def __len__(self):
         return len(self.label)
+
     def __getitem__(self, index):
         image_path = str(index + 1) + ".png"
         cls = self.label[image_path]["class"]
@@ -31,11 +33,11 @@ class PikachuDetDataset(torch.utils.data.Dataset):
         PIL_img = Image.open(os.path.join(self.image_dir, image_path)
                             ).convert('RGB').resize(self.image_size)
         img = self.transform(PIL_img)
-        sample = {
-            "label": label, # shape: (1, 5) [class, xmin, ymin, xmax, ymax]
-            "image": img    # shape: (3, *image_size)
-        }
-        return sample
+        # sample = {
+        #     "label": label, # shape: (1, 5) [class, xmin, ymin, xmax, ymax]
+        #     "image": img    # shape: (3, *image_size)
+        # }
+        return img, label
 
 
 # 本函数已保存在d2lzh_pytorch包中方便以后使用
@@ -193,6 +195,7 @@ for epoch in range(num_epochs):
     for features, target in train_iter:
         timer.start()
         trainer.zero_grad()
+        print(type(features),type(target))
         X, Y = features.to(device), target.to(device)
         # Generate multiscale anchor boxes and predict the category and
         # offset of each
